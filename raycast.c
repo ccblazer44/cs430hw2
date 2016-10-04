@@ -27,11 +27,6 @@ double cameraWidth;
 double cameraHeight;
 double **viewPlane;
 
-
-
-
-
-// next_c() wraps the getc() function and provides error checking and line
 // number maintenance
 int next_c(FILE* json) {
   int c = fgetc(json);
@@ -48,8 +43,7 @@ int next_c(FILE* json) {
   return c;
 }
 
-// expect_c() checks that the next character is d.  If it is not it emits
-// an error.
+// expect_c() checks that the next character is d.  If it is not it emits an error.
 void expect_c(FILE* json, int d) {
   int c = next_c(json);
   if (c == d) return;
@@ -66,8 +60,7 @@ void skip_ws(FILE* json) {
   ungetc(c, json);
 }
 
-// next_string() gets the next string from the file handle and emits an error
-// if a string can not be obtained.
+// next_string() gets the next string from the file handle and emits an error if a string can not be obtained.
 char* next_string(FILE* json) {
   char buffer[129];
   int c = next_c(json);
@@ -101,7 +94,6 @@ char* next_string(FILE* json) {
 double next_number(FILE* json) {
   double value;
   fscanf(json, "%lf", &value);
-  // Error check this..
   return value;
 }
 
@@ -182,7 +174,7 @@ void read_scene(char* filename) {
       skip_ws(json);
 
       while (1) {
-    // , }
+
     c = next_c(json);
     if (c == '}') {
       // stop parsing this object
@@ -215,7 +207,6 @@ void read_scene(char* filename) {
       else {
         fprintf(stderr, "Error: Unknown property, \"%s\", on line %d.\n",
           key, line);
-        //char* value = next_string(json);
       }
       skip_ws(json);
     } else {
@@ -226,7 +217,7 @@ void read_scene(char* filename) {
       skip_ws(json);
       c = next_c(json);
       if (c == ',') {
-  // noop
+
   skip_ws(json);
       } else if (c == ']') {
   fclose(json);
@@ -241,7 +232,7 @@ void read_scene(char* filename) {
 
 
 void raycast() {
-  //TODO
+
   int i;
   int j;
   int index = 0;
@@ -272,6 +263,8 @@ void raycast() {
       //printf("before while\n");
       objectIndex = 0;
 
+      double t;
+
       while(objects[objectIndex].color != NULL){
 
         
@@ -280,7 +273,7 @@ void raycast() {
 
           
           //use unit vector to calculate collision
-          double t = (((x * objects[objectIndex].position[0]) + (y * objects[objectIndex].position[1]) + (z * objects[objectIndex].position[2]))/(pow(x, 2) + pow(y, 2) + pow(z, 2)));
+          t = (((x * objects[objectIndex].position[0]) + (y * objects[objectIndex].position[1]) + (z * objects[objectIndex].position[2]))/(pow(x, 2) + pow(y, 2) + pow(z, 2)));
 
 
 
@@ -311,6 +304,18 @@ void raycast() {
 
         }
         else if(strcmp(objects[objectIndex].type, "plane") == 0){
+          //befre
+
+           //printf("\nIndex: %d Object %s\n", index, scene.object[index].type);
+          t = -(objects[objectIndex].normal[0] * (0 - objects[objectIndex].position[0]) + objects[objectIndex].normal[1] * (0 - objects[objectIndex].position[1]) + objects[objectIndex].normal[2] * (0 - objects[objectIndex].position[2])) / (objects[objectIndex].normal[0] * x + objects[objectIndex].normal[1] * y + objects[objectIndex].normal[2] * z);
+          //printf("plane T: %f\n", tClosestApproach);
+          if (min > t) {
+            viewPlane[index] = objects[objectIndex].color;
+            //min = t;
+          }
+
+
+          //after
 
         }
 
@@ -357,25 +362,29 @@ void write_scene(char *filename, int format) {
       //printf("%d\n", index);
       int color = (int) (viewPlane[index][0] * 255); // color will be set into some type of array during raycast, ie raycast[index][0];
       fwrite(&color, 1, 1, ppm); //red
-      color = (int) viewPlane[index][1] * 255;
+      color = (int) (viewPlane[index][1] * 255);
       fwrite(&color, 1, 1, ppm); //green
-      color = (int) viewPlane[index][2] * 255;
+      color = (int) (viewPlane[index][2] * 255);
       fwrite(&color, 1, 1, ppm); //blue
     }
   }
   else if (format == 3) {
     for (index = 0; index < Width * Height; index++) {
 
-      int color = viewPlane[index][0];
+      int color = (int) (viewPlane[index][0] * 255);
+      printf("%d\n", color);
       fprintf(ppm, "%d\n", color);
-      color = viewPlane[index][1];
+      color = (int) (viewPlane[index][1] * 255);
+      printf("%d\n", color);
       fprintf(ppm, "%d\n", color);
-      color = viewPlane[index][2];
+      color = (int) (viewPlane[index][2] * 255);
+      printf("%d\n", color);
       fprintf(ppm, "%d\n", color);
     }
   }
   fclose(ppm);
 }
+
 
 void initializeViewPlane() {
   double black[3] = {0,0,0};
@@ -400,7 +409,7 @@ int main(int argc, char** argv) {
     read_scene(argv[3]);
 
     viewPlane = (double **)malloc(Width * Height * 3 * sizeof(double));
-    initializeViewPlane();
+    //initializeViewPlane();
     raycast();
     write_scene(argv[4], 6);
     return 0;
