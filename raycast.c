@@ -245,6 +245,7 @@ void raycast() {
   int i;
   int j;
   int index = 0;
+  int objectIndex;
   //loop through all pixels
   for(i = 0; i < Width; i++){
     for(j = 0; j < Height; j++){
@@ -252,10 +253,12 @@ void raycast() {
       
       double x, y, z = 1; // z is always 1 because the view plane is 1 unit away from camera
 
-      x = ((cameraWidth/2) + ((cameraWidth/Width)*(j + 0.5)));
-      y = ((cameraHeight/2) + ((cameraHeight/He)*(i + 0.5)));
+      x = 0 - (cameraWidth/2) + ((cameraWidth/Width)*(j + 0.5));
+      y = 0 - (cameraHeight/2) + ((cameraHeight/Height)*(i + 0.5));
 
-      // calculate magnitude using distance formula
+      printf("Vector x and y: %f %f\n", x, y);
+
+      // calculate magnitude using "distance formula"
       double magnitude = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
 
       // replace vector with unit vector
@@ -263,20 +266,62 @@ void raycast() {
       y = y/magnitude;
       z = z/magnitude; 
 
-      while(objects[index].color != NULL){
+      // set min so that close objects display over further ones
+      double min = 100000;
 
-        //use unit vector to calculate collision
-        if(strcmp(objects[index].type, "sphere") == 0){
+      //printf("before while\n");
+      objectIndex = 0;
 
-        }
-        else if(strcmp(objects[index].type, "plane") == 0){
+      while(objects[objectIndex].color != NULL){
+
+        
+
+        if(strcmp(objects[objectIndex].type, "sphere") == 0){
+
           
+          //use unit vector to calculate collision
+          double t = (((x * objects[objectIndex].position[0]) + (y * objects[objectIndex].position[1]) + (z * objects[objectIndex].position[2]))/(pow(x, 2) + pow(y, 2) + pow(z, 2)));
+
+
+
+          //find point on vector closest to center of sphere
+          double tCloseX = x * t;
+          double tCloseY = y * t;
+          double tCloseZ = z * t;
+          double d = sqrt(pow((tCloseX - objects[objectIndex].position[0]), 2) + pow((tCloseY - objects[objectIndex].position[1]), 2) + pow((tCloseZ - objects[objectIndex].position[2]), 2));
+
+          //printf("d radius: %f %f\n", d, objects[objectIndex].radius);
+
+          if(d <= objects[objectIndex].radius){
+
+
+            //find distance from camera to actual intersection point and set it to t
+            double a = sqrt(pow(objects[objectIndex].radius, 2) - pow(d, 2));
+            t = t - a;
+
+            //printf("t is: %f\n", t);
+            //set new min so that close objects display over further ones
+            if (min > t){
+              printf("adding something");
+              min = t;
+              viewPlane[index] = objects[objectIndex].color;
+            }
+
+          }
+
         }
+        else if(strcmp(objects[objectIndex].type, "plane") == 0){
+
+        }
+
+        // printf("while %d\n", index);
+        // printf("object index %d\n", objectIndex);
+        objectIndex++;
 
       }
 
 
-
+      //printf("after while\n");
       index++;
     }
   }
@@ -309,27 +354,37 @@ void write_scene(char *filename, int format) {
   if (format == 6) {
     for (index = 0; index < Width * Height; index++) {
 
-
-      int color = 0; // color will be set into some type of array during raycast, ie raycast[index][0];
+      //printf("%d\n", index);
+      int color = (int) (viewPlane[index][0] * 255); // color will be set into some type of array during raycast, ie raycast[index][0];
       fwrite(&color, 1, 1, ppm); //red
-      color = 255;
+      color = (int) viewPlane[index][1] * 255;
       fwrite(&color, 1, 1, ppm); //green
-      color = 0;
+      color = (int) viewPlane[index][2] * 255;
       fwrite(&color, 1, 1, ppm); //blue
     }
   }
   else if (format == 3) {
     for (index = 0; index < Width * Height; index++) {
 
-      int color = 0;
+      int color = viewPlane[index][0];
       fprintf(ppm, "%d\n", color);
-      color = 0;
+      color = viewPlane[index][1];
       fprintf(ppm, "%d\n", color);
-      color = 255;
+      color = viewPlane[index][2];
       fprintf(ppm, "%d\n", color);
     }
   }
   fclose(ppm);
+}
+
+void initializeViewPlane() {
+  double black[3] = {0,0,0};
+  int row, column;
+  for (row = 0; row < Width; row++) {
+    for (column = 0; column < Height; column++) {
+      viewPlane[row * Height + column] = black;
+    }
+  }
 }
 
 int main(int argc, char** argv) {
@@ -345,8 +400,8 @@ int main(int argc, char** argv) {
     read_scene(argv[3]);
 
     viewPlane = (double **)malloc(Width * Height * 3 * sizeof(double));
-
-    //raycast
-    write_scene(argv[4], 3);
+    initializeViewPlane();
+    raycast();
+    write_scene(argv[4], 6);
     return 0;
 }
