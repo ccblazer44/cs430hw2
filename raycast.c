@@ -240,8 +240,8 @@ void raycast() {
   int objectIndex;
 
   //loop through all pixels
-  for(i = 0; i < Width; i++){
-    for(j = 0; j < Height; j++){
+  for(i = 0; i < Height; i++){
+    for(j = 0; j < Width; j++){
 
       double x, y, z = 1; //z is always 1 because the view plane is 1 unit away from camera
 
@@ -283,7 +283,7 @@ void raycast() {
             t = t - a;
 
             //set new min so that close spheres display over further ones
-            if (min > t){
+            if (min >= t){
               min = t;
               viewPlane[index] = objects[objectIndex].color; //push color into viewPane
             }
@@ -294,7 +294,7 @@ void raycast() {
           //use unit vector to calculate collision
           t = -(objects[objectIndex].normal[0] * (0 - objects[objectIndex].position[0]) + objects[objectIndex].normal[1] * (0 - objects[objectIndex].position[1]) + objects[objectIndex].normal[2] * (0 - objects[objectIndex].position[2])) / (objects[objectIndex].normal[0] * x + objects[objectIndex].normal[1] * y + objects[objectIndex].normal[2] * z);
 
-          if (min > t) {
+          if (min >= t) {
             viewPlane[index] = objects[objectIndex].color; //push color into viewPane
             min = t;
           }
