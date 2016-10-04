@@ -26,6 +26,7 @@ int color;
 double cameraWidth;
 double cameraHeight;
 double **viewPlane; //2d array to store pixel color data from raycast
+double white[3] = {1,1,1};
 
 //number maintenance
 int next_c(FILE* json) {
@@ -300,6 +301,9 @@ void raycast() {
         }
         objectIndex++;
       }
+      if(min == 999999999999999999){
+        viewPlane[index] = white;
+      }
       index++;
     }
   }
@@ -351,19 +355,10 @@ void write_scene(char *filename, int format) {
       fprintf(ppm, "%d\n", color);
     }
   }
+
   fclose(ppm);
 }
 
-void fillVP() {
-    double blank[3] = {1,1,1};
-    int i, j, index = 0;
-   for (i = 0; i < Width; i++) {
-     for (j = 0; j < Height; j++) {
-       viewPlane[index] = blank;
-       index++;
-     }
-   }
- }
 
 int main(int argc, char** argv) {
 
@@ -378,7 +373,6 @@ int main(int argc, char** argv) {
     read_scene(argv[3]);
 
     viewPlane = (double **)malloc(Width * Height * 3 * sizeof(double));  
-    fillVP();
     raycast();
     write_scene(argv[4], 3);
     return 0;
