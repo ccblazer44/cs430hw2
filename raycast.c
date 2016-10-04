@@ -25,6 +25,9 @@ int Height;
 int color;
 double cameraWidth;
 double cameraHeight;
+double **viewPlane;
+
+
 
 
 
@@ -239,6 +242,44 @@ void read_scene(char* filename) {
 
 void raycast() {
   //TODO
+  int i;
+  int j;
+  int index = 0;
+  //loop through all pixels
+  for(i = 0; i < Width; i++){
+    for(j = 0; j < Height; j++){
+
+      
+      double x, y, z = 1; // z is always 1 because the view plane is 1 unit away from camera
+
+      x = ((cameraWidth/2) + ((cameraWidth/Width)*(j + 0.5)));
+      y = ((cameraHeight/2) + ((cameraHeight/He)*(i + 0.5)));
+
+      // calculate magnitude using distance formula
+      double magnitude = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
+
+      // replace vector with unit vector
+      x = x/magnitude;
+      y = y/magnitude;
+      z = z/magnitude; 
+
+      while(objects[index].color != NULL){
+
+        //use unit vector to calculate collision
+        if(strcmp(objects[index].type, "sphere") == 0){
+
+        }
+        else if(strcmp(objects[index].type, "plane") == 0){
+          
+        }
+
+      }
+
+
+
+      index++;
+    }
+  }
 }
 
 
@@ -302,6 +343,9 @@ int main(int argc, char** argv) {
     Height = atoi(argv[2]);
 
     read_scene(argv[3]);
+
+    viewPlane = (double **)malloc(Width * Height * 3 * sizeof(double));
+
     //raycast
     write_scene(argv[4], 3);
     return 0;
